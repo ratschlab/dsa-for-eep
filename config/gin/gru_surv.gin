@@ -1,0 +1,135 @@
+import gin.torch.external_configurables
+import dsaeep.train.pipeline
+import dsaeep.data.datasets
+import dsaeep.models.encoders
+import dsaeep.models.utility_layers
+import dsaeep.train.sequence
+import dsaeep.train.utils
+import dsaeep.evaluation.event
+import dsaeep.evaluation.survival_event
+
+
+# Model Parameter
+EMB = 231
+HIDDEN = 256
+NUM_CLASSES = 100
+DEPTH = 2
+DO = 0.0
+L1_REG = 10.0
+
+# Training Parameter
+LR = 1e-4
+BS = 32
+EPOCHS = 200 # 10
+TASK = 'Dynamic_CircFailure_12Hours'
+ACC = 'gpu' # 'gpu'
+WORKERS = 8
+GRADCLIP = None
+
+# Data Parameter
+RES = 1
+RES_LAB = 1
+MAXLEN = 2016
+DATA_PATH = None
+ENDPOINT_PATH = None
+PRED_HORIZON = 96
+SURV = True
+PATIENCE = 10
+SMOOTH = False
+SURV_SCALE = 1
+
+
+# Dataset
+ICUVariableLengthDataset.maxlen = %MAXLEN
+
+ICUVariableLengthLoaderTables.splits = ['train','test','val']
+ICUVariableLengthLoaderTables.task = %TASK
+ICUVariableLengthLoaderTables.data_resampling = %RES
+ICUVariableLengthLoaderTables.label_resampling = %RES_LAB
+ICUVariableLengthLoaderTables.on_RAM = False
+ICUVariableLengthLoaderTables.surv = %SURV
+ICUVariableLengthLoaderTables.max_horizon = %NUM_CLASSES
+ICUVariableLengthLoaderTables.smooth_labels = %SMOOTH
+ICUVariableLengthLoaderTables.surv_scale = %SURV_SCALE
+
+# SetupTrain Stage
+SetupTrain.model = @SequenceModel()
+SetupTrain.dataset_class = @ICUVariableLengthDataset
+SetupTrain.wrapper_class = @SurvivalWrapper
+SetupTrain.data_path = %DATA_PATH
+
+# TrainWithPL Stage
+TrainWithPL.batch_size = %BS
+TrainWithPL.max_epochs = %EPOCHS
+TrainWithPL.num_workers = %WORKERS
+TrainWithPL.class_weights = None
+TrainWithPL.accelerator = %ACC
+TrainWithPL.early_stopping_patience = %PATIENCE
+TrainWithPL.grad_clip_val = %GRADCLIP
+TrainWithPL.pin_memory = True
+
+# TestModelPL Stage
+TestModelPL.accelerator = %ACC
+TestModelPL.batch_size = %BS
+TestModelPL.num_workers = %WORKERS
+
+# Training Wrapper
+SurvivalWrapper.learning_rate = %LR
+SurvivalWrapper.weight_decay = 1e-6
+SurvivalWrapper.loss = 'landmarking'
+SurvivalWrapper.task = 'classification/binary'
+SurvivalWrapper.l1_reg_emb =  %L1_REG
+SurvivalWrapper.pred_horizon = %PRED_HORIZON
+
+# Full Model Configuration
+SequenceModel.input_dim = %EMB
+SequenceModel.hidden_dim = %HIDDEN
+SequenceModel.num_classes = %NUM_CLASSES
+SequenceModel.encoder = @EmbeddedSequenceEncoder
+SequenceModel.logit_layer = @Linear
+
+# Sequence Model 
+EmbeddedSequenceEncoder.step_embedding_class = @Linear
+EmbeddedSequenceEncoder.seq_encoder_class = @GRUEncoder
+
+# GRU Encoder
+GRUEncoder.num_layers = %DEPTH
+GRUEncoder.dropout = %DO
+
+DLTrainPipeline.do_train = True
+DLTrainPipeline.do_test = True
+DLTrainPipeline.stages = [@SurvivalEventEvaluation]
+
+# Event Evaluation
+# Configure the silencing
+SilencingConfig.window_size_min = 480 # the window size (horizon length) in minutes
+SilencingConfig.silence_time_min = 25 # the silencing period in minutes
+SilencingConfig.reset_time_min = 20 # the reset period in minutes
+SilencingConfig.silence_optimize = False # whether to optimize the silencing period based on the validation set for AuPRC
+SilencingConfig.silence_optimize_mins = [10, 20, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 400, 500] # the silencing periods to optimize over greedily
+
+EventEvaluation.detect_full_past_window = False
+EventEvaluation.drop_events_only_full_window = False
+
+EventEvaluation.patient_endpoint_data_dir = %ENDPOINT_PATH
+EventEvaluation.num_thresholds = 2000 # number of thresholds to evaluate the model on (for the AuPRC): linearly spaced
+EventEvaluation.accelerator = %ACC # pass accelerator again here in case we perform inference
+EventEvaluation.batch_size = 16 # batch size for the inference
+EventEvaluation.subsample_parts = -1 # subsample the endpoint parts file (for debugging only); -1 will consider all parts
+
+EventEvaluation.silence_config = @SilencingConfig() # initialize a silencing configuration (as defined above)
+EventEvaluation.target_recalls = [0.8, 0.9, 0.95, 0.97, 0.99] # the target recalls to evaluate the model on for the recall at distance plot
+EventEvaluation.lateness_target_recalls = [0.25, 0.5, 0.75, 0.9] # the target recalls to evaluate the model on for the lateness plot
+EventEvaluation.lateness_target_silencings = [0, 30, 120, 360] # the target silencing periods to evaluate the model on for the lateness plot
+EventEvaluation.lateness_silencing_recall = 0.8 # the recall to evaluate the model on for the lateness plot with varying silencing periods
+EventEvaluation.reset_times_performance = [0, 5, 15, 25, 45, 60, 90, 120] # different reset times tested for performance
+
+EventEvaluation.use_pred_cache = True # use a cache for the predictions (cache them if not yet and use cached if available), will rely on the `state.log_dir)`
+EventEvaluation.use_endpoint_cache = True # same as before
+EventEvaluation.store_scores = True # store data used for plots in the `state.log_dir` and not only the plots themselves
+EventEvaluation.event_column = "circ_failure_status"
+
+SurvivalEventEvaluation.run_q_exp_fixed = True
+SurvivalEventEvaluation.run_q_exp_flipped_fixed = True
+SurvivalEventEvaluation.q_exp_fixed_h_max = 144
+SurvivalEventEvaluation.q_exp_fixed_gamma = 0.5

@@ -1,0 +1,44 @@
+# ==================================
+# Parameter Search Configuration
+# ==================================
+
+# ----------------------------------
+# Compute Resources
+# ----------------------------------
+compute:
+  gpus: 1 # number of GPUs
+  # gpu_type: rtx2080ti # GPU type
+  cores: 8 # number of cores
+  memory: 8 # GB of memory per core
+  time: 12 # hours
+
+
+
+params:
+
+  # Model
+  DATA_PATH: "{}.h5"
+  ENDPOINT_PATH: "{}/endpoints/"
+
+  DEPTH: 2
+  DO: 0.0
+  L1_REG: 10.0
+  LR: 0.0003
+  BS: 64
+
+  SilencingConfig.silence_optimize: True
+  SilencingConfig.window_size_min: 5 # the window size (horizon length) in minutes
+  SilencingConfig.silence_optimize_mins: [[5, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 400, 500, 600, 700, 800]] # the silencing periods to optimize over greedily
+
+# ----------------------------------
+# Experiment Settings / 'Globals'
+# ----------------------------------
+# Seeds
+seeds: [1111, 2222, 3333, 4444, 5555, 6666, 7777, 8888, 9999, 0000]
+
+wandb_project: ''
+run_command: 'python -m phrt_ml.scripts.train_sequence_model'
+base_gin: './config/gin/gru.gin'
+task: 'Dynamic_CircFailure_12Hours'
+
+

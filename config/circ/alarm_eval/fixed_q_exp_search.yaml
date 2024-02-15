@@ -1,0 +1,47 @@
+# ==================================
+# Parameter Search Configuration
+# ==================================
+
+# ----------------------------------
+# Compute Resources
+# ----------------------------------
+compute:
+  gpus: 1 # number of GPUs
+  # gpu_type: rtx2080ti # GPU type
+  cores: 4 # number of cores
+  memory: 8 # GB of memory per core
+  time: 12 # hours
+
+
+
+params:
+
+  # Model
+  DATA_PATH: "{}.h5"
+  ENDPOINT_PATH: "{}/endpoints/"
+  
+  SurvivalEventEvaluation.run_q_exp_fixed: True
+  SurvivalEventEvaluation.run_q_exp_flipped_fixed: True
+  SurvivalEventEvaluation.q_exp_fixed_h_max: 144
+  SurvivalEventEvaluation.q_exp_fixed_gamma: 0.5
+
+  # SetupTrain.load_weights: []
+  
+  # Reset config
+  SilencingConfig.silence_time_min: 5
+  SilencingConfig.reset_time_min: 0
+  EventEvaluation.mask_reset_time_steps: False
+
+
+# ----------------------------------
+# Experiment Settings / 'Globals'
+# ----------------------------------
+# Seeds
+# seeds: [1111, 2222, 3333, 4444, 5555, 6666, 7777, 8888, 9999, 0000]
+seeds: [1111]
+
+wandb_project: ''
+run_command: 'python -m phrt_ml.scripts.train_sequence_model'
+base_gin: './config/circ/alarm_eval/gru_surv.gin'
+task: 'Dynamic_CircFailure_12Hours'
+

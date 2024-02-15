@@ -1,0 +1,46 @@
+name: dsa-eep
+
+channels:
+  - defaults
+  - nvidia
+  - pytorch
+  - conda-forge
+  
+dependencies:
+  - python=3.9
+  - pytorch::pytorch-cuda=11.8
+  - pytorch::pytorch=2.1
+  - pytorch::torchvision>=0.14.1
+  - pytorch::torchaudio>=0.13.1
+  - pytorch-lightning>=1.9.3,<2.0.0
+  - numpy=1.23
+  - pandas<2.0
+  - scikit-learn>=1.2.0
+  - jupyter>=1.0.0
+  - jupyterlab>=3.5.3
+  - seaborn>=0.12.2
+  - matplotlib>=3.6.2
+  - pytest==7.1.2
+  - pytest-cov==3.0.0
+  - codecov==2.1.11
+  - mypy==0.981
+  - pip>=21.0.1
+  - tqdm>=4.64
+  - pyarrow>=8.0.0
+  - pytables>=3.7.0
+  - black==22.6.0
+  - isort==5.9.3
+  - pyspark>=3.2.1
+  - conda-lock==1.4.0
+  - gin-config>=0.5.0
+  - tensorboard>=2.11.0
+  - coolname>=2.2.0
+  - wandb>=0.14.0
+  - lightgbm>=3.3.5
+  - plotly>=5.9.0
+  - pip:
+    - pathos>=0.2.9
+    - scikit-fda>=0.8.1
+    - coloredlogs>=15.0
+    - types-PyYAML
+    - reportlab>=4.0.4
