@@ -1,5 +1,7 @@
 # Dynamic Survival Analysis for Early Event Prediction
 
+![pipeline_overview.png](pipeline_overview.png)
+
 Code used to generate the results in the paper "Dynamic Survival Analysis for Early Event Prediction".
 
 ## Data
