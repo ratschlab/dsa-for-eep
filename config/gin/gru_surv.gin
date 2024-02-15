@@ -12,7 +12,7 @@ import dsaeep.evaluation.survival_event
 # Model Parameter
 EMB = 231
 HIDDEN = 256
-NUM_CLASSES = 100
+NUM_CLASSES = 145
 DEPTH = 2
 DO = 0.0
 L1_REG = 10.0
@@ -32,7 +32,7 @@ RES_LAB = 1
 MAXLEN = 2016
 DATA_PATH = None
 ENDPOINT_PATH = None
-PRED_HORIZON = 96
+PRED_HORIZON = 144
 SURV = True
 PATIENCE = 10
 SMOOTH = False
