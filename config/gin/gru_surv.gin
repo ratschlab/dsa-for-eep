@@ -129,7 +129,14 @@ EventEvaluation.use_endpoint_cache = True # same as before
 EventEvaluation.store_scores = True # store data used for plots in the `state.log_dir` and not only the plots themselves
 EventEvaluation.event_column = "circ_failure_status"
 
+SurvivalEventEvaluation.survival_pred_horizons_steps = [12, 24, 36, 48, 60, 72, 84, 96, 108, 120, 132, 144]
+SurvivalEventEvaluation.num_sensitivity_thresholds = 2000
+SurvivalEventEvaluation.fixed_horizon_steps = 144
 SurvivalEventEvaluation.run_q_exp_fixed = True
 SurvivalEventEvaluation.run_q_exp_flipped_fixed = True
 SurvivalEventEvaluation.q_exp_fixed_h_max = 144
 SurvivalEventEvaluation.q_exp_fixed_gamma = 0.5
+
+q_exp_param.h_true = %PRED_HORIZON
+q_exp_param.h_min = 0
+q_exp_param.delta_h = 12
